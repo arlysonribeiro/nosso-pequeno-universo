@@ -8,6 +8,32 @@ const configuredMemories = Array.isArray(mediaConfig.memories) ? mediaConfig.mem
 const configuredChoices = mediaConfig.choices || {};
 const pickChoiceMedia = (key) => configuredChoices[key] || {};
 
+function startPageAtTop() {
+  if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
+  }
+
+  if (window.location.hash) {
+    window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
+  }
+
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  if (document.body) {
+    document.body.scrollTop = 0;
+  }
+}
+
+function scheduleStartPageAtTop() {
+  startPageAtTop();
+  window.requestAnimationFrame(startPageAtTop);
+  [80, 300].forEach((delay) => window.setTimeout(startPageAtTop, delay));
+}
+
+scheduleStartPageAtTop();
+window.addEventListener("load", scheduleStartPageAtTop, { once: true });
+window.addEventListener("pageshow", scheduleStartPageAtTop);
+
 const motives = [
   "Você fez meus olhos brilharem pela primeira vez em anos.",
   "Você foi o fim de uma era de pura dor.",
@@ -683,6 +709,7 @@ function runLoader() {
 function closeLoader() {
   loader.classList.add("is-hidden");
   document.body.classList.remove("is-loading");
+  startPageAtTop();
   playBackgroundMusic();
 }
 

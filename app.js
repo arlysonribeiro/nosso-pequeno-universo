@@ -713,18 +713,38 @@ function closeLoader() {
   playBackgroundMusic();
 }
 
+function createSeededRandom(seed) {
+  let value = seed >>> 0;
+  return () => {
+    value = (value * 1664525 + 1013904223) >>> 0;
+    return value / 4294967296;
+  };
+}
+
 function createConstellation() {
   const container = document.getElementById("constellation");
   const fragment = document.createDocumentFragment();
   const denseSky = motives.length > 120;
+  const edgePadding = denseSky ? 3.2 : 5;
+
   motives.forEach((motive, index) => {
+    const random = createSeededRandom(12062023 + index * 7919);
+    const x = edgePadding + random() * (100 - edgePadding * 2);
+    const y = edgePadding + random() * (100 - edgePadding * 2);
+    const size = denseSky ? 0.34 + random() * 0.46 : 0.74 + random() * 0.78;
+    const isWarm = random() > 0.66;
+    const isCool = !isWarm && random() > 0.78;
+
     const star = document.createElement("button");
     star.type = "button";
     star.className = "star-dot";
-    star.style.left = `${7 + ((index * 37) % 86)}%`;
-    star.style.top = `${8 + ((index * 53) % 82)}%`;
-    star.style.setProperty("--size", `${denseSky ? 0.52 + (index % 5) * 0.08 : 0.95 + (index % 5) * 0.16}rem`);
-    star.style.setProperty("--delay", `${(index % 9) * 0.16}s`);
+    star.style.left = `${Math.min(97, Math.max(3, x)).toFixed(3)}%`;
+    star.style.top = `${Math.min(97, Math.max(3, y)).toFixed(3)}%`;
+    star.style.setProperty("--size", `${size.toFixed(3)}rem`);
+    star.style.setProperty("--delay", `${(random() * 4.8).toFixed(2)}s`);
+    star.style.setProperty("--twinkle", `${(2.2 + random() * 4.6).toFixed(2)}s`);
+    star.style.setProperty("--glow", `${Math.round(12 + random() * 34)}px`);
+    star.style.setProperty("--temperature", isWarm ? "255, 224, 168" : isCool ? "206, 238, 255" : "255, 255, 255");
     star.setAttribute("aria-label", `Motivo ${index + 1}`);
     star.addEventListener("click", () => openMotive(index));
     fragment.appendChild(star);
@@ -1225,80 +1245,39 @@ function setupCanvas() {
   const canvas = document.getElementById("starCanvas");
   const ctx = canvas.getContext("2d");
   const stars = [];
-  const loveSegments = [];
+  const dust = [];
   let width = 0;
   let height = 0;
   let animationFrame = 0;
-  let seed = 12062023;
+  let random = createSeededRandom(12062023);
 
-  function random() {
-    seed = (seed * 1664525 + 1013904223) >>> 0;
-    return seed / 4294967296;
-  }
-
-  function addStar(x, y, options = {}) {
+  function addStar(options = {}) {
+    const bright = random() > 0.965;
+    const medium = !bright && random() > 0.82;
+    const warm = random() > 0.82;
+    const cool = !warm && random() > 0.76;
     stars.push({
-      x: x * width,
-      y: y * height,
-      r: options.r || 0.35 + random() * 1.45,
-      alpha: options.alpha || 0.28 + random() * 0.58,
+      x: (options.x ?? random()) * width,
+      y: (options.y ?? random()) * height,
+      r: options.r ?? (bright ? 1.55 + random() * 1.55 : medium ? 0.75 + random() * 0.95 : 0.18 + random() * 0.7),
+      alpha: options.alpha ?? (bright ? 0.78 + random() * 0.2 : medium ? 0.42 + random() * 0.35 : 0.2 + random() * 0.44),
       phase: random() * Math.PI * 2,
-      twinkle: options.twinkle || 0.55 + random() * 1.8,
-      drift: options.drift || random() * 3.5,
-      color: options.color || (random() > 0.72 ? "255, 214, 138" : "255, 248, 235"),
-      love: Boolean(options.love)
+      twinkle: options.twinkle ?? (0.4 + random() * 1.7),
+      drift: options.drift ?? (0.2 + random() * 1.8),
+      color: options.color ?? (warm ? "255, 232, 186" : cool ? "205, 236, 255" : "255, 255, 255"),
+      spike: options.spike ?? bright
     });
   }
 
-  function addLoveStar(x, y) {
-    addStar(x + (random() - 0.5) * 0.008, y + (random() - 0.5) * 0.012, {
-      r: 1.15 + random() * 1.25,
-      alpha: 0.58 + random() * 0.34,
-      twinkle: 1.15 + random() * 1.65,
-      drift: 0.35,
-      color: random() > 0.35 ? "255, 214, 138" : "255, 248, 235",
-      love: true
+  function addDust() {
+    dust.push({
+      x: random() * width,
+      y: random() * height,
+      r: 0.08 + random() * 0.28,
+      alpha: 0.04 + random() * 0.1,
+      drift: random() * 0.8,
+      phase: random() * Math.PI * 2
     });
-  }
-
-  function addSegment(x1, y1, x2, y2, count) {
-    const segment = [];
-    for (let index = 0; index < count; index += 1) {
-      const t = count === 1 ? 0 : index / (count - 1);
-      const point = {
-        x: x1 + (x2 - x1) * t,
-        y: y1 + (y2 - y1) * t
-      };
-      segment.push(point);
-      addLoveStar(point.x, point.y);
-    }
-    loveSegments.push(segment);
-  }
-
-  function addEllipse(cx, cy, rx, ry, count) {
-    const segment = [];
-    for (let index = 0; index < count; index += 1) {
-      const angle = (Math.PI * 2 * index) / count;
-      const point = {
-        x: cx + Math.cos(angle) * rx,
-        y: cy + Math.sin(angle) * ry
-      };
-      segment.push(point);
-      addLoveStar(point.x, point.y);
-    }
-    loveSegments.push(segment);
-  }
-
-  function addLoveConstellation() {
-    addSegment(0.14, 0.17, 0.14, 0.41, 13);
-    addSegment(0.14, 0.41, 0.26, 0.41, 8);
-    addEllipse(0.36, 0.29, 0.075, 0.12, 28);
-    addSegment(0.49, 0.17, 0.56, 0.41, 14);
-    addSegment(0.63, 0.17, 0.56, 0.41, 14);
-    addSegment(0.72, 0.17, 0.72, 0.41, 13);
-    addSegment(0.72, 0.17, 0.85, 0.17, 9);
-    addSegment(0.72, 0.29, 0.82, 0.29, 7);
-    addSegment(0.72, 0.41, 0.85, 0.41, 9);
   }
 
   function resize() {
@@ -1310,54 +1289,36 @@ function setupCanvas() {
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    seed = 12062023;
+    random = createSeededRandom(12062023 + Math.round(width) * 13 + Math.round(height) * 17);
     stars.length = 0;
-    loveSegments.length = 0;
-    addLoveConstellation();
-    const total = Math.min(420, Math.max(180, Math.floor((width * height) / 4300)));
+    dust.length = 0;
+    const total = Math.min(1150, Math.max(360, Math.floor((width * height) / 1500)));
+    const dustTotal = Math.min(520, Math.max(150, Math.floor((width * height) / 4200)));
     for (let i = 0; i < total; i += 1) {
-      addStar(random(), random(), {
-        r: 0.25 + random() * (random() > 0.94 ? 2.5 : 1.35),
-        alpha: 0.16 + random() * 0.55,
-        drift: 0.8 + random() * 5.2
-      });
+      addStar();
+    }
+    for (let i = 0; i < dustTotal; i += 1) {
+      addDust();
     }
   }
 
-  function drawNebula(time) {
-    const glows = [
-      [width * 0.18, height * 0.14, Math.max(width, height) * 0.55, "115, 251, 211", 0.055],
-      [width * 0.78, height * 0.28, Math.max(width, height) * 0.45, "240, 86, 140", 0.05],
-      [width * 0.5, height * 0.72, Math.max(width, height) * 0.5, "142, 116, 255", 0.04]
-    ];
-
-    glows.forEach(([x, y, radius, color, alpha], index) => {
-      const pulse = 0.78 + Math.sin(time * 0.00018 + index) * 0.12;
-      const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-      gradient.addColorStop(0, `rgba(${color}, ${alpha * pulse})`);
-      gradient.addColorStop(1, `rgba(${color}, 0)`);
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-    });
-  }
-
-  function drawLoveHints(time) {
+  function drawDepth(time) {
     ctx.save();
+    ctx.globalCompositeOperation = "source-over";
+    const vignette = ctx.createRadialGradient(width * 0.5, height * 0.5, 0, width * 0.5, height * 0.5, Math.max(width, height) * 0.72);
+    vignette.addColorStop(0, "rgba(5, 7, 12, 0.3)");
+    vignette.addColorStop(0.62, "rgba(0, 0, 0, 0.08)");
+    vignette.addColorStop(1, "rgba(0, 0, 0, 0.68)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, width, height);
+
     ctx.globalCompositeOperation = "screen";
-    ctx.lineWidth = 0.55;
-    ctx.strokeStyle = `rgba(255, 214, 138, ${0.06 + Math.sin(time * 0.001) * 0.018})`;
-    loveSegments.forEach((segment) => {
+    dust.forEach((point) => {
+      const flicker = 0.62 + Math.sin(time * 0.00055 + point.phase) * 0.28;
+      ctx.fillStyle = `rgba(210, 226, 255, ${point.alpha * flicker})`;
       ctx.beginPath();
-      segment.forEach((point, index) => {
-        const x = point.x * width;
-        const y = point.y * height;
-        if (index === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      });
-      ctx.stroke();
+      ctx.arc(point.x + Math.cos(time * 0.00004 + point.phase) * point.drift, point.y, point.r, 0, Math.PI * 2);
+      ctx.fill();
     });
     ctx.restore();
   }
@@ -1365,23 +1326,22 @@ function setupCanvas() {
   function draw() {
     const time = performance.now();
     ctx.clearRect(0, 0, width, height);
-    drawNebula(time);
-    drawLoveHints(time);
+    drawDepth(time);
     stars.forEach((star) => {
-      const twinkle = 0.58 + Math.sin(time * 0.001 * star.twinkle + star.phase) * 0.42;
-      const driftX = Math.cos(time * 0.00008 + star.phase) * star.drift;
-      const driftY = Math.sin(time * 0.00006 + star.phase) * star.drift;
+      const twinkle = 0.68 + Math.sin(time * 0.001 * star.twinkle + star.phase) * 0.32;
+      const driftX = Math.cos(time * 0.000045 + star.phase) * star.drift;
+      const driftY = Math.sin(time * 0.00004 + star.phase) * star.drift;
       const alpha = Math.max(0.06, star.alpha * twinkle);
       const x = star.x + driftX;
       const y = star.y + driftY;
 
-      if (star.r > 1.65 || star.love) {
-        const glow = ctx.createRadialGradient(x, y, 0, x, y, star.r * 5.8);
-        glow.addColorStop(0, `rgba(${star.color}, ${alpha * 0.32})`);
+      if (star.r > 1.1) {
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, star.r * 7);
+        glow.addColorStop(0, `rgba(${star.color}, ${alpha * 0.35})`);
         glow.addColorStop(1, `rgba(${star.color}, 0)`);
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(x, y, star.r * 5.8, 0, Math.PI * 2);
+        ctx.arc(x, y, star.r * 7, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -1389,6 +1349,19 @@ function setupCanvas() {
       ctx.fillStyle = `rgba(${star.color}, ${alpha})`;
       ctx.arc(x, y, star.r, 0, Math.PI * 2);
       ctx.fill();
+
+      if (star.spike) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(${star.color}, ${alpha * 0.72})`;
+        ctx.lineWidth = 0.45;
+        ctx.beginPath();
+        ctx.moveTo(x - star.r * 5.2, y);
+        ctx.lineTo(x + star.r * 5.2, y);
+        ctx.moveTo(x, y - star.r * 5.2);
+        ctx.lineTo(x, y + star.r * 5.2);
+        ctx.stroke();
+        ctx.restore();
+      }
     });
     animationFrame = requestAnimationFrame(draw);
   }

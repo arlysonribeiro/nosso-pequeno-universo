@@ -28,9 +28,10 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 20% 10%, rgba(240, 86, 140, 0.2), transparent 28rem),
-    radial-gradient(circle at 84% 22%, rgba(115, 251, 211, 0.14), transparent 24rem),
-    linear-gradient(140deg, var(--night), var(--night-2) 58%, #130b18);
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.035), transparent 26rem),
+    radial-gradient(circle at 15% 82%, rgba(125, 190, 255, 0.045), transparent 24rem),
+    radial-gradient(circle at 82% 18%, rgba(255, 221, 164, 0.028), transparent 20rem),
+    linear-gradient(180deg, #000000 0%, #03040a 48%, #010102 100%);
   color: var(--ink);
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -62,6 +63,7 @@ button {
   z-index: 0;
   width: 100%;
   height: 100%;
+  opacity: 0.96;
   pointer-events: none;
 }
 
@@ -73,9 +75,9 @@ button {
   place-items: center;
   padding: 1.25rem;
   background:
-    radial-gradient(circle at center top, rgba(255, 143, 183, 0.22), transparent 28rem),
-    radial-gradient(circle at right bottom, rgba(115, 251, 211, 0.14), transparent 26rem),
-    #070711;
+    radial-gradient(circle at center top, rgba(255, 255, 255, 0.08), transparent 28rem),
+    radial-gradient(circle at right bottom, rgba(115, 251, 211, 0.08), transparent 26rem),
+    #000004;
   transition:
     opacity 700ms ease,
     visibility 700ms ease;
@@ -421,16 +423,19 @@ button {
 
 .constellation {
   position: relative;
-  min-height: 38rem;
+  min-height: 42rem;
   margin-top: 2rem;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius);
   background:
-    radial-gradient(circle at 18% 22%, rgba(255, 143, 183, 0.18), transparent 18rem),
-    radial-gradient(circle at 78% 56%, rgba(115, 251, 211, 0.16), transparent 18rem),
-    linear-gradient(150deg, rgba(4, 5, 14, 0.88), rgba(18, 12, 34, 0.7));
-  box-shadow: var(--shadow);
+    radial-gradient(circle at 48% 52%, rgba(255, 255, 255, 0.055), transparent 18rem),
+    radial-gradient(circle at 82% 22%, rgba(210, 235, 255, 0.055), transparent 15rem),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.98), rgba(2, 3, 8, 0.94));
+  box-shadow:
+    inset 0 0 90px rgba(0, 0, 0, 0.88),
+    inset 0 0 1px rgba(255, 255, 255, 0.34),
+    var(--shadow);
 }
 
 .constellation::before,
@@ -442,17 +447,32 @@ button {
 }
 
 .constellation::before {
-  background-image:
-    linear-gradient(112deg, transparent 0 47%, rgba(255, 255, 255, 0.12) 48%, transparent 49%),
-    linear-gradient(25deg, transparent 0 42%, rgba(115, 251, 211, 0.1) 43%, transparent 44%);
-  opacity: 0.46;
+  background:
+    radial-gradient(ellipse at 50% 52%, rgba(255, 255, 255, 0.08), transparent 2%),
+    radial-gradient(ellipse at 48% 54%, rgba(200, 224, 255, 0.045), transparent 23%),
+    radial-gradient(ellipse at 52% 48%, rgba(255, 235, 198, 0.03), transparent 31%);
+  filter: blur(0.8px);
+  opacity: 0.78;
 }
 
 .constellation::after {
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.6px);
-  background-size: 104px 104px;
-  animation: drift 30s linear infinite;
-  opacity: 0.46;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 0.7px, transparent 1.3px),
+    radial-gradient(circle, rgba(210, 235, 255, 0.62) 0 0.6px, transparent 1.25px),
+    radial-gradient(circle, rgba(255, 226, 178, 0.58) 0 0.55px, transparent 1.2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.24) 0 0.45px, transparent 1px);
+  background-position:
+    0 0,
+    42px 68px,
+    128px 38px,
+    86px 152px;
+  background-size:
+    86px 86px,
+    137px 137px,
+    211px 211px,
+    53px 53px;
+  animation: deepSkyDrift 46s linear infinite;
+  opacity: 0.72;
 }
 
 .star-dot {
@@ -474,20 +494,42 @@ button {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 0 18%, var(--gold) 19% 34%, transparent 64%);
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 1) 0 16%, rgba(var(--temperature), 0.9) 17% 35%, rgba(var(--temperature), 0.35) 36% 48%, transparent 70%);
   box-shadow:
-    0 0 12px rgba(255, 214, 138, 0.72),
-    0 0 30px rgba(255, 143, 183, 0.32);
-  animation: pulseStar 2.6s ease-in-out infinite;
+    0 0 8px rgba(var(--temperature), 0.92),
+    0 0 var(--glow) rgba(var(--temperature), 0.48);
+  animation: motiveTwinkle var(--twinkle) ease-in-out infinite;
   animation-delay: var(--delay);
+}
+
+.star-dot::after {
+  content: "";
+  position: absolute;
+  width: 210%;
+  height: 210%;
+  background:
+    linear-gradient(90deg, transparent 0 46%, rgba(var(--temperature), 0.78) 49% 51%, transparent 54% 100%),
+    linear-gradient(0deg, transparent 0 46%, rgba(var(--temperature), 0.62) 49% 51%, transparent 54% 100%);
+  opacity: 0.08;
+  transform: rotate(45deg) scale(0.76);
+  animation: motiveSpark var(--twinkle) ease-in-out infinite;
+  animation-delay: calc(var(--delay) + 0.18s);
+  pointer-events: none;
 }
 
 .star-dot:hover::before,
 .star-dot:focus-visible::before {
   box-shadow:
     0 0 16px rgba(255, 255, 255, 0.9),
-    0 0 42px rgba(115, 251, 211, 0.62);
-  transform: scale(1.45);
+    0 0 44px rgba(var(--temperature), 0.82);
+  transform: scale(1.65);
+}
+
+.star-dot:hover::after,
+.star-dot:focus-visible::after {
+  opacity: 0.7;
+  transform: rotate(45deg) scale(1.16);
 }
 
 .timeline {
@@ -995,16 +1037,48 @@ button {
   }
 }
 
-@keyframes pulseStar {
+@keyframes deepSkyDrift {
+  from {
+    background-position:
+      0 0,
+      42px 68px,
+      128px 38px,
+      86px 152px;
+  }
+
+  to {
+    background-position:
+      86px 172px,
+      179px 342px,
+      339px 249px,
+      139px 311px;
+  }
+}
+
+@keyframes motiveTwinkle {
   0%,
   100% {
-    opacity: 0.58;
-    transform: scale(0.86);
+    opacity: 0.42;
+    transform: scale(0.72);
   }
 
   50% {
     opacity: 1;
-    transform: scale(1.18);
+    transform: scale(1.16);
+  }
+}
+
+@keyframes motiveSpark {
+  0%,
+  100% {
+    opacity: 0.04;
+    transform: rotate(45deg) scale(0.62);
+  }
+
+  45%,
+  55% {
+    opacity: 0.34;
+    transform: rotate(45deg) scale(1);
   }
 }
 
@@ -1112,7 +1186,7 @@ button {
   }
 
   .constellation {
-    min-height: 34rem;
+    min-height: 38rem;
   }
 
   .modal__media--gallery {

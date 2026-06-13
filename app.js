@@ -1195,13 +1195,111 @@ function setupReveal() {
   document.querySelectorAll("[data-reveal]").forEach((element) => observer.observe(element));
 }
 
+function setupInternalLinks() {
+  document.querySelectorAll('a[href^="#"]').forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const href = link.getAttribute("href");
+      if (!href || href === "#") return;
+
+      const target = document.getElementById(href.slice(1));
+      if (!target) return;
+
+      event.preventDefault();
+      const topbarOffset = 86;
+      const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - topbarOffset);
+      window.scrollTo({ top, behavior: "smooth" });
+      target.classList.add("is-visible");
+
+      if (window.history && window.history.replaceState) {
+        try {
+          window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}${href}`);
+        } catch {
+          // Some Android WebViews restrict history updates on local files.
+        }
+      }
+    });
+  });
+}
+
 function setupCanvas() {
   const canvas = document.getElementById("starCanvas");
   const ctx = canvas.getContext("2d");
   const stars = [];
+  const loveSegments = [];
   let width = 0;
   let height = 0;
   let animationFrame = 0;
+  let seed = 12062023;
+
+  function random() {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  }
+
+  function addStar(x, y, options = {}) {
+    stars.push({
+      x: x * width,
+      y: y * height,
+      r: options.r || 0.35 + random() * 1.45,
+      alpha: options.alpha || 0.28 + random() * 0.58,
+      phase: random() * Math.PI * 2,
+      twinkle: options.twinkle || 0.55 + random() * 1.8,
+      drift: options.drift || random() * 3.5,
+      color: options.color || (random() > 0.72 ? "255, 214, 138" : "255, 248, 235"),
+      love: Boolean(options.love)
+    });
+  }
+
+  function addLoveStar(x, y) {
+    addStar(x + (random() - 0.5) * 0.008, y + (random() - 0.5) * 0.012, {
+      r: 1.15 + random() * 1.25,
+      alpha: 0.58 + random() * 0.34,
+      twinkle: 1.15 + random() * 1.65,
+      drift: 0.35,
+      color: random() > 0.35 ? "255, 214, 138" : "255, 248, 235",
+      love: true
+    });
+  }
+
+  function addSegment(x1, y1, x2, y2, count) {
+    const segment = [];
+    for (let index = 0; index < count; index += 1) {
+      const t = count === 1 ? 0 : index / (count - 1);
+      const point = {
+        x: x1 + (x2 - x1) * t,
+        y: y1 + (y2 - y1) * t
+      };
+      segment.push(point);
+      addLoveStar(point.x, point.y);
+    }
+    loveSegments.push(segment);
+  }
+
+  function addEllipse(cx, cy, rx, ry, count) {
+    const segment = [];
+    for (let index = 0; index < count; index += 1) {
+      const angle = (Math.PI * 2 * index) / count;
+      const point = {
+        x: cx + Math.cos(angle) * rx,
+        y: cy + Math.sin(angle) * ry
+      };
+      segment.push(point);
+      addLoveStar(point.x, point.y);
+    }
+    loveSegments.push(segment);
+  }
+
+  function addLoveConstellation() {
+    addSegment(0.14, 0.17, 0.14, 0.41, 13);
+    addSegment(0.14, 0.41, 0.26, 0.41, 8);
+    addEllipse(0.36, 0.29, 0.075, 0.12, 28);
+    addSegment(0.49, 0.17, 0.56, 0.41, 14);
+    addSegment(0.63, 0.17, 0.56, 0.41, 14);
+    addSegment(0.72, 0.17, 0.72, 0.41, 13);
+    addSegment(0.72, 0.17, 0.85, 0.17, 9);
+    addSegment(0.72, 0.29, 0.82, 0.29, 7);
+    addSegment(0.72, 0.41, 0.85, 0.41, 9);
+  }
 
   function resize() {
     const ratio = window.devicePixelRatio || 1;
@@ -1212,30 +1310,84 @@ function setupCanvas() {
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    seed = 12062023;
     stars.length = 0;
-    const total = Math.min(150, Math.floor((width * height) / 9000));
+    loveSegments.length = 0;
+    addLoveConstellation();
+    const total = Math.min(420, Math.max(180, Math.floor((width * height) / 4300)));
     for (let i = 0; i < total; i += 1) {
-      stars.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        r: Math.random() * 1.4 + 0.2,
-        speed: Math.random() * 0.08 + 0.025,
-        alpha: Math.random() * 0.55 + 0.25
+      addStar(random(), random(), {
+        r: 0.25 + random() * (random() > 0.94 ? 2.5 : 1.35),
+        alpha: 0.16 + random() * 0.55,
+        drift: 0.8 + random() * 5.2
       });
     }
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, width, height);
-    stars.forEach((star) => {
-      star.y += star.speed;
-      if (star.y > height + 8) {
-        star.y = -8;
-        star.x = Math.random() * width;
-      }
+  function drawNebula(time) {
+    const glows = [
+      [width * 0.18, height * 0.14, Math.max(width, height) * 0.55, "115, 251, 211", 0.055],
+      [width * 0.78, height * 0.28, Math.max(width, height) * 0.45, "240, 86, 140", 0.05],
+      [width * 0.5, height * 0.72, Math.max(width, height) * 0.5, "142, 116, 255", 0.04]
+    ];
+
+    glows.forEach(([x, y, radius, color, alpha], index) => {
+      const pulse = 0.78 + Math.sin(time * 0.00018 + index) * 0.12;
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      gradient.addColorStop(0, `rgba(${color}, ${alpha * pulse})`);
+      gradient.addColorStop(1, `rgba(${color}, 0)`);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+    });
+  }
+
+  function drawLoveHints(time) {
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.lineWidth = 0.55;
+    ctx.strokeStyle = `rgba(255, 214, 138, ${0.06 + Math.sin(time * 0.001) * 0.018})`;
+    loveSegments.forEach((segment) => {
       ctx.beginPath();
-      ctx.fillStyle = `rgba(255, 248, 235, ${star.alpha})`;
-      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+      segment.forEach((point, index) => {
+        const x = point.x * width;
+        const y = point.y * height;
+        if (index === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function draw() {
+    const time = performance.now();
+    ctx.clearRect(0, 0, width, height);
+    drawNebula(time);
+    drawLoveHints(time);
+    stars.forEach((star) => {
+      const twinkle = 0.58 + Math.sin(time * 0.001 * star.twinkle + star.phase) * 0.42;
+      const driftX = Math.cos(time * 0.00008 + star.phase) * star.drift;
+      const driftY = Math.sin(time * 0.00006 + star.phase) * star.drift;
+      const alpha = Math.max(0.06, star.alpha * twinkle);
+      const x = star.x + driftX;
+      const y = star.y + driftY;
+
+      if (star.r > 1.65 || star.love) {
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, star.r * 5.8);
+        glow.addColorStop(0, `rgba(${star.color}, ${alpha * 0.32})`);
+        glow.addColorStop(1, `rgba(${star.color}, 0)`);
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, star.r * 5.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${star.color}, ${alpha})`;
+      ctx.arc(x, y, star.r, 0, Math.PI * 2);
       ctx.fill();
     });
     animationFrame = requestAnimationFrame(draw);
@@ -1270,6 +1422,7 @@ renderLetters();
 renderFinalLetter();
 renderChoices();
 setupReveal();
+setupInternalLinks();
 setupCanvas();
 setupLyricPlayer();
 setupBackgroundMusic();

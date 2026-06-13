@@ -504,7 +504,7 @@ const finalParagraphs = [
   "Apesar das minhas falhas, sou muito abençoado por ter você. Deus me deu a melhor esposa do mundo, mesmo eu sendo torto, rebelde e falho. Você é a pessoa mais valiosa da minha vida, acima de qualquer dinheiro, bem material ou qualquer outra pessoa.",
   "Não vou prometer que tudo será sempre perfeito, porque amor de verdade não precisa de mentira bonita. Mas posso prometer que meu amor por você estará sempre crescendo, e que eu estarei disposto a lutar por você e por nós.",
   "O seu amor foi como uma virada de página na minha história: um passo dos dias cinzentos para os campos floridos de um verão radiante. Obrigado por me escolher todos os dias e por me ajudar a ser alguém melhor a cada amanhecer.",
-  "<strong>EU AMO MUITO VOCÊ, PARA TODO O SEMPRE...</strong>"
+  "<strong>EU AMO MUITO VOCÊ, PARA TODO O SEMPRE!</strong>"
 ];
 
 const choices = [

@@ -572,23 +572,23 @@ let shouldResumeBackgroundAfterLyric = false;
 let activeLyricIndex = -1;
 
 const syncedLyrics = [
-  { time: 0, pt: "Mal posso esperar pra te ver amanhã", en: "I can't wait to see you tomorrow" },
-  { time: 11, pt: "Estou contando as horas", en: "I'm counting the hours" },
-  { time: 20, pt: "Vou esperar por você nas catracas", en: "I'll wait there for you at the turnstile" },
-  { time: 31, pt: "Me desculpe se não te trouxer flores", en: "Sorry if I don't bring you flowers" },
-  { time: 43, pt: "Estou ficando cansado de ficar sozinho", en: "I'm getting tired of being alone" },
-  { time: 53, pt: "Passarei um tempo com você no telefone", en: "I'll spend some time with you on the phone" },
-  { time: 64, pt: "Quero ouvir você reclamar das coisas", en: "I wanna hear you complain about things" },
-  { time: 74, pt: "Quero ouvir você jogar videogame", en: "I wanna hear you play video games" },
+  { time: 14, pt: "Mal posso esperar pra te ver amanhã", en: "I can't wait to see you tomorrow" },
+  { time: 23, pt: "Estou contando as horas", en: "I'm counting the hours" },
+  { time: 30, pt: "Vou esperar por você nas catracas", en: "I'll wait there for you at the turnstile" },
+  { time: 36, pt: "Me desculpe se não te trouxer flores", en: "Sorry if I don't bring you flowers" },
+  { time: 42, pt: "Estou ficando cansado de ficar sozinho", en: "I'm getting tired of being alone" },
+  { time: 50, pt: "Passarei um tempo com você no telefone", en: "I'll spend some time with you on the phone" },
+  { time: 56, pt: "Quero ouvir você reclamar das coisas", en: "I wanna hear you complain about things" },
+  { time: 65, pt: "Quero ouvir você jogar videogame", en: "I wanna hear you play video games" },
   { time: 84, pt: "Eu gosto quando nossos corações batem juntos", en: "I like when our hearts beat together" },
-  { time: 94, pt: "É a minha música favorita", en: "It's my favorite song" },
-  { time: 104, pt: "Eu espero que o mundo inteiro possa ouvir", en: "I hope that the whole world can hear it" },
-  { time: 114, pt: "E eles teriam que cantar junto", en: "And they'll have to sing along" },
-  { time: 124, pt: "Eu quero te beijar e fazer cócegas no seu nariz", en: "I wanna kiss you and tickle your nose" },
-  { time: 136, pt: "Quero te contar uma piada", en: "I wanna tell you a joke" },
-  { time: 146, pt: "Quero cantar uma música enquanto você pega no sono", en: "I'll sing a song as you fall asleep" },
-  { time: 156, pt: "Tive um sonho em que você estava cantando pra mim", en: "I had a dream you were singin' to me" },
-  { time: 166, pt: "Mal posso esperar pra te ver amanhã", en: "I can't wait to see you tomorrow" }
+  { time: 92, pt: "É a minha música favorita", en: "It's my favorite song" },
+  { time: 99, pt: "Eu espero que o mundo inteiro possa ouvir", en: "I hope that the whole world can hear it" },
+  { time: 105, pt: "E eles teriam que cantar junto", en: "And they'll have to sing along" },
+  { time: 112, pt: "Eu quero te beijar e fazer cócegas no seu nariz", en: "I wanna kiss you and tickle your nose" },
+  { time: 120, pt: "Quero te contar uma piada", en: "I wanna tell you a joke" },
+  { time: 128, pt: "Quero cantar uma música enquanto você pega no sono", en: "I'll sing a song as you fall asleep" },
+  { time: 135, pt: "Tive um sonho em que você estava cantando pra mim", en: "I had a dream you were singin' to me" },
+  { time: 162, pt: "Mal posso esperar pra te ver amanhã", en: "I can't wait to see you tomorrow" }
 ];
 
 document.body.classList.add("is-loading");
@@ -1008,7 +1008,7 @@ function updateLyricTime() {
 }
 
 function getActiveLyricIndex(currentTime) {
-  let activeIndex = 0;
+  let activeIndex = -1;
   syncedLyrics.forEach((line, index) => {
     if (currentTime >= line.time) {
       activeIndex = index;
